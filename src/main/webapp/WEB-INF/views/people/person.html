@@ -8,14 +8,19 @@
     <p th:text="${person.getId() + '. ' + person.getName() + ', ' + person.getBirthDate()}"></p>
 
     <div>Ordered books:</div>
-    <div th:each="order : ${orders}">
-        <a th:href="@{/books/{id}(id=${order.getBookId()})}"
-           th:text="${order.getBookName()}">Order value</a>
+    <div th:if="${!books.isEmpty()}">
+        <div th:each="book : ${books}">
+            <a th:style="${book.isOverdue()} ? 'color:red' : 'color:black'" th:href="@{/books/{id}(id=${book.getId()})}"
+            th:text="${book.getTitle()}">Book title</a>
+        </div>
     </div>
-    <div th:if="${orders.isEmpty()}">Person doesn't order any book</div>
+
+    <div th:if="${books.isEmpty()}">Person doesn't order any book</div>
     <br/>
+
     <a th:href="@{/people/{id}/update(id=${person.getId()})}">Edit person</a>
     <br/>
+
     <form th:method="DELETE" th:action="@{/people/{id}(id=${person.getId()})}">
         <input type="submit" value="Delete person"/>
     </form>

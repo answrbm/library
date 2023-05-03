@@ -1,10 +1,8 @@
 package ansarbektassov.controllers;
 
-import ansarbektassov.dao.BookDAO;
-import ansarbektassov.dao.OrderDAO;
-import ansarbektassov.dao.PersonDAO;
-import ansarbektassov.models.Order;
 import ansarbektassov.models.Person;
+import ansarbektassov.service.PeopleService;
+import ansarbektassov.util.PersonNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -12,36 +10,35 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/people")
 public class PeopleController {
 
-    private final BookDAO bookDAO;
-    private final OrderDAO orderDAO;
-    private final PersonDAO personDAO;
+    private final PeopleService service;
 
     @Autowired
-    public PeopleController(BookDAO bookDAO, OrderDAO orderDAO, PersonDAO personDAO) {
-        this.bookDAO = bookDAO;
-        this.personDAO = personDAO;
-        this.orderDAO = orderDAO;
+    public PeopleController(PeopleService service) {
+        this.service = service;
     }
 
     @GetMapping()
     public String getPeople(Model model) {
-        model.addAttribute("people",personDAO.getPeople());
+        model.addAttribute("people",service.findAll());
         return "people/index";
     }
 
     @GetMapping("/{id}")
-    public String getPerson(Model model,@PathVariable("id") int id) {
-        List<Order> orders = orderDAO.getOrdersByPersonId(id);
-        orders.forEach(order -> order.setBookName(bookDAO.getBook(order.getBookId()).getTitle()));
+    public String getPerson(Model model,@PathVariable("id") int id) throws PersonNotFoundException {
+        Optional<Person> foundPerson = service.findById(id);
+        if(foundPerson.isPresent()) {
+            Person person = foundPerson.get();
+            model.addAttribute("person",person);
+            model.addAttribute("books",service.findByOwner(person));
+        }
+        else throw new PersonNotFoundException("Person wasn't found");
 
-        model.addAttribute("person",personDAO.getPerson(id));
-        model.addAttribute("orders",orders);
         return "people/person";
     }
 
@@ -56,13 +53,15 @@ public class PeopleController {
         if(bindingResult.hasErrors())
             return "people/create";
 
-        personDAO.save(person);
+        service.save(person);
         return "redirect:/people";
     }
 
     @GetMapping("/{id}/update")
-    public String updatePerson(Model model,@PathVariable("id")int id) {
-        model.addAttribute("person",personDAO.getPerson(id));
+    public String updatePerson(Model model,@PathVariable("id")int id) throws PersonNotFoundException {
+        Optional<Person> foundPerson = service.findById(id);
+        if(foundPerson.isPresent()) model.addAttribute("person",foundPerson.get());
+        else throw new PersonNotFoundException("Person wasn't found");
         return "people/update";
     }
 
@@ -71,13 +70,13 @@ public class PeopleController {
                                @PathVariable("id") int id) {
         if(bindingResult.hasErrors()) return "people/update";
 
-        personDAO.update(id,person);
+        service.update(id,person);
         return "redirect:/people";
     }
 
     @DeleteMapping("/{id}")
     public String delete(@PathVariable("id") int id) {
-        personDAO.delete(id);
+        service.delete(id);
         return "redirect:/people";
     }
 

@@ -8,22 +8,22 @@
     <p th:text="${book.getId() + '. ' + book.getTitle() + ', ' + book.getAuthor() + ', ' + book.getYear()}"></p>
 
     <div>Current owner:</div>
-    <div th:if="${order.isEmpty()}">
+    <div th:if="${people}">
         <p>Book is available</p>
         <br/>
-        <form th:method="POST" th:action="@{/orders/create/{id}(id=${book.getId()})}">
-            <label for="order">Choose an owner:</label>
-            <select th:object="${emptyOrder}" th:field="*{personId}" id="order">
+        <form th:method="PATCH" th:action="@{/books/{id}/assign(id=${book.getId()})}">
+            <label for="owner">Choose an owner:</label>
+            <select th:object="${person}" th:field="*{id}" id="owner">
                 <option th:each="p : ${people}" th:value="${p.getId()}"
                         th:text="${p.getName()}"></option>
             </select>
             <input type="submit" value="Select"/>
         </form>
     </div>
-    <div th:if="${order.isPresent()}">
-        <form th:method="DELETE" th:action="@{/orders/{id}(id=${order.get().getId()})}">
-            <a th:href="@{/people/{id}(id=${order.get().getPersonId()})}"
-               th:text="${order.get().getPersonName()}">Order value</a>
+    <div th:if="${owner}">
+        <form th:method="PATCH" th:action="@{/books/{id}/release(id=${book.getId()})}">
+            <a th:href="@{/people/{id}(id=${owner.get().getId()})}"
+               th:text="${owner.get().getName()}">Person value</a>
             <input type="submit" value="Release"/>
         </form>
     </div>

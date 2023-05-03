@@ -1,22 +1,39 @@
 package ansarbektassov.models;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.util.Date;
+import java.util.List;
+
+@Entity
+@Table(name = "Person")
 public class Person {
 
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @NotEmpty
-    @Size(min = 2, max = 100, message = "Author name should be between 2 and 100 characters")
+    @Column(name = "name")
+    @NotEmpty(message = "Name must not be empty")
+    @Size(min = 2, max = 100, message = "Name should be between 2 and 100 characters")
     private String name;
-    @Pattern(regexp = "\\d{4}.\\d{2}.\\d{2}", message = "Use pattern: year.mm.dd")
-    private String birthDate;
+
+    @Column(name = "birthdate")
+    @Past(message = "Birth date must be in the past")
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    private Date birthDate;
+
+    @OneToMany(mappedBy = "owner")
+    private List<Book> books;
 
     public Person() {}
 
-    public Person(int id, String name, String birthDate) {
+    public Person(int id, String name, Date birthDate) {
         this.id = id;
         this.name = name;
         this.birthDate = birthDate;
@@ -38,11 +55,28 @@ public class Person {
         this.name = name;
     }
 
-    public String getBirthDate() {
+    public Date getBirthDate() {
         return birthDate;
     }
 
-    public void setBirthDate(String birthDate) {
+    public void setBirthDate(Date birthDate) {
         this.birthDate = birthDate;
+    }
+
+    public List<Book> getBooks() {
+        return books;
+    }
+
+    public void setBooks(List<Book> books) {
+        this.books = books;
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", birthDate='" + birthDate + '\'' +
+                '}';
     }
 }
